@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: multi-app-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /java
+        pathType: Prefix
+        backend:
+          service:
+            name: java-app-service
+            port:
+              number: 80
+      - path: /node
+        pathType: Prefix
+        backend:
+          service:
+            name: node-app-service
+            port:
+              number: 80
+      - path: /python
+        pathType: Prefix
+        backend:
+          service:
+            name: python-app-service
+            port:
+              number: 80

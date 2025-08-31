@@ -1,0 +1,19 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: multi-app-pipeline-run
+spec:
+  pipelineRef:
+    name: multi-app-pipeline
+  params:
+    - name: AWS_ACCOUNT
+      value: 676509179952
+    - name: REGION
+      value: ap-south-1
+    - name: IMAGE_TAG
+      value: v1.0.0
+    - name: IMAGE_REGISTRY
+      value: 676509179952.dkr.ecr.ap-south-1.amazonaws.com
+  workspaces:
+    - name: source
+      emptyDir: {}

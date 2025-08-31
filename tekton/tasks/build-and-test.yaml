@@ -1,0 +1,58 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-and-test
+spec:
+  workspaces:
+    - name: source
+      description: "The source code workspace shared across all steps"
+  steps:
+    # Java test step
+    - name: test-java
+      image: maven:3.8.8-openjdk-17
+      workingDir: /workspace/source/services/java-app
+      script: |
+        #!/bin/sh
+        echo "Running Java tests..."
+        mvn clean test
+      env:
+        - name: MAVEN_OPTS
+          value: "-Dmaven.repo.local=/workspace/source/.m2/repository"
+      resources:
+        limits:
+          cpu: "1"
+          memory: "1Gi"
+
+    # Node.js test step
+    - name: test-node
+      image: node:20
+      workingDir: /workspace/source/services/node-app
+      script: |
+        #!/bin/sh
+        echo "Running Node.js tests..."
+        npm install
+        npm test
+      env:
+        - name: NPM_CONFIG_CACHE
+          value: /workspace/source/.npm
+      resources:
+        limits:
+          cpu: "0.5"
+          memory: "512Mi"
+
+    # Python test step
+    - name: test-python
+      image: python:3.12
+      workingDir: /workspace/source/services/python-app
+      script: |
+        #!/bin/sh
+        echo "Running Python tests..."
+        pip install --cache-dir=/workspace/source/.pip -r requirements.txt
+        pytest
+      env:
+        - name: PIP_CACHE_DIR
+          value: /workspace/source/.pip
+      resources:
+        limits:
+          cpu: "0.5"
+          memory: "512Mi"

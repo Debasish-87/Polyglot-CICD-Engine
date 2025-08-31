@@ -1,9 +1,12 @@
 package com.example;
-import org.junit.Test;
-import static org.junit.Assert.*;
-public class AppTest {
+
+import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+
+class AppTest {
+
     @Test
-    public void testTrue() {
-        assertTrue(true);
+    void contextLoads() {
+        assertThat(true).isTrue();
     }
 }

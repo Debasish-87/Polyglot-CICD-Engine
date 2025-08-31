@@ -1,0 +1,41 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: multi-app-pipeline
+spec:
+  params:
+    - name: AWS_ACCOUNT
+      type: string
+    - name: REGION
+      type: string
+    - name: IMAGE_TAG
+      type: string
+    - name: IMAGE_REGISTRY
+      type: string
+  workspaces:
+    - name: source
+  tasks:
+    - name: run-tests
+      taskRef:
+        name: build-and-test
+      workspaces:
+        - name: source
+          workspace: source
+
+    - name: build-images
+      taskRef:
+        name: kaniko-build
+      runAfter:
+        - run-tests
+      params:
+        - name: AWS_ACCOUNT
+          value: $(params.AWS_ACCOUNT)
+        - name: REGION
+          value: $(params.REGION)
+        - name: IMAGE_TAG
+          value: $(params.IMAGE_TAG)
+        - name: IMAGE_REGISTRY
+          value: $(params.IMAGE_REGISTRY)
+      workspaces:
+        - name: source
+          workspace: source

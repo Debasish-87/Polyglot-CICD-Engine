@@ -1,0 +1,59 @@
+name: CI/CD Multi-Microservice
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCOUNT_ID: 676509179952
+      AWS_REGION: ap-south-1
+      ECR_REPO: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Build Java App
+      run: |
+        cd java-app
+        mvn clean package
+        docker build -t $ECR_REPO/java-app:latest .
+        aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REPO
+        docker push $ECR_REPO/java-app:latest
+
+    - name: Build Node App
+      run: |
+        cd node-app
+        npm install
+        npm test
+        docker build -t $ECR_REPO/node-app:latest .
+        aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REPO
+        docker push $ECR_REPO/node-app:latest
+
+    - name: Build Python App
+      run: |
+        cd python-app
+        pip install -r requirements.txt
+        docker build -t $ECR_REPO/python-app:latest .
+        aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REPO
+        docker push $ECR_REPO/python-app:latest
+
+    - name: Deploy to EKS
+      run: |
+        cd k8s
+        kubectl apply -f java-app-deployment.yaml
+        kubectl apply -f node-app-deployment.yaml
+        kubectl apply -f python-app-deployment.yaml
+        kubectl apply -f multi-app-ingress.yaml

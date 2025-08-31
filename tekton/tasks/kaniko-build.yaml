@@ -1,0 +1,40 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: kaniko-build
+spec:
+  workspaces:
+    - name: source
+  params:
+    - name: IMAGE_REGISTRY
+      type: string
+    - name: IMAGE_TAG
+      type: string
+    - name: AWS_ACCOUNT
+      type: string
+    - name: REGION
+      type: string
+  steps:
+    - name: build-and-push-java
+      image: gcr.io/kaniko-project/executor:latest
+      script: |
+        #!/busybox/sh
+        /kaniko/executor --dockerfile=/workspace/source/services/java-app/Dockerfile \
+                         --context=/workspace/source/services/java-app \
+                         --destination=$(params.IMAGE_REGISTRY)/java-app:$(params.IMAGE_TAG)
+
+    - name: build-and-push-node
+      image: gcr.io/kaniko-project/executor:latest
+      script: |
+        #!/busybox/sh
+        /kaniko/executor --dockerfile=/workspace/source/services/node-app/Dockerfile \
+                         --context=/workspace/source/services/node-app \
+                         --destination=$(params.IMAGE_REGISTRY)/node-app:$(params.IMAGE_TAG)
+
+    - name: build-and-push-python
+      image: gcr.io/kaniko-project/executor:latest
+      script: |
+        #!/busybox/sh
+        /kaniko/executor --dockerfile=/workspace/source/services/python-app/Dockerfile \
+                         --context=/workspace/source/services/python-app \
+                         --destination=$(params.IMAGE_REGISTRY)/python-app:$(params.IMAGE_TAG)
