@@ -61,8 +61,10 @@ jobs:
     # Step 7: Deploy to EKS
     - name: Deploy to EKS
       run: |
+        # Configure kubeconfig to connect to EKS
+        aws eks update-kubeconfig --region $AWS_REGION --name polyci-cluster
+        
         cd k8s
-        # Apply deployments; will create if not exist or update if exist
         kubectl apply -f java-app-deployment.yaml
         kubectl apply -f node-app-deployment.yaml
         kubectl apply -f python-app-deployment.yaml
