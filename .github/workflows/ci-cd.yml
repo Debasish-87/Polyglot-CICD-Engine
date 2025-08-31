@@ -12,12 +12,13 @@ jobs:
     env:
       AWS_ACCOUNT_ID: 676509179952
       AWS_REGION: ap-south-1
-      ECR_REPO: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
 
     steps:
+    # Step 1: Checkout the repository
     - name: Checkout code
       uses: actions/checkout@v3
 
+    # Step 2: Configure AWS credentials
     - name: Configure AWS
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -25,34 +26,43 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
+    # Step 3: Set ECR repository environment variable
+    - name: Set ECR repo
+      run: echo "ECR_REPO=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com" >> $GITHUB_ENV
+
+    # Step 4: Build and push Java app
     - name: Build Java App
       run: |
-        cd java-app
+        cd services/java-app
         mvn clean package
         docker build -t $ECR_REPO/java-app:latest .
-        aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REPO
+        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
         docker push $ECR_REPO/java-app:latest
 
+    # Step 5: Build and push Node.js app
     - name: Build Node App
       run: |
-        cd node-app
+        cd services/node-app
         npm install
         npm test
         docker build -t $ECR_REPO/node-app:latest .
-        aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REPO
+        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
         docker push $ECR_REPO/node-app:latest
 
+    # Step 6: Build and push Python app
     - name: Build Python App
       run: |
-        cd python-app
+        cd services/python-app
         pip install -r requirements.txt
         docker build -t $ECR_REPO/python-app:latest .
-        aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REPO
+        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
         docker push $ECR_REPO/python-app:latest
 
+    # Step 7: Deploy to EKS
     - name: Deploy to EKS
       run: |
         cd k8s
+        # Apply deployments; will create if not exist or update if exist
         kubectl apply -f java-app-deployment.yaml
         kubectl apply -f node-app-deployment.yaml
         kubectl apply -f python-app-deployment.yaml
