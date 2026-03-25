@@ -147,6 +147,8 @@ python-app: 676509179952.dkr.ecr.ap-south-1.amazonaws.com/python-app
 
 > Configure `tkn` as a `kubectl` plugin for seamless CLI integration.
 
+> Conect to ZeroTrustOps SecTL WebHook for auto scan. 
+
 ---
 
 ## Screenshots
@@ -217,7 +219,5 @@ aws eks delete-cluster --name polyci-cluster
 ## License
 
 Apache-2.0 © 2025 [Debasish-87](https://github.com/Debasish-87)
-
-
 
 ---
